@@ -1,0 +1,8 @@
+# ignore c labguage server cache
+.ccls-cache
+# ignore binaries
+*.out
+*.spv
+
+#ignore my personal notes
+*notes.txt
