@@ -820,8 +820,6 @@ private:
         if(vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS){
             throw std::runtime_error("failed to create render pass!");
         }
-
-
     }
 
     void createFrameBuffers(){
@@ -859,7 +857,6 @@ private:
         if(vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool) != VK_SUCCESS){
             throw std::runtime_error("failed to create command pool!");
         }
-
     }
 
     void createCommandBuffers(){
@@ -905,7 +902,6 @@ private:
             }
 
         }
-
     }
 
     void createSyncObjects(){
@@ -930,7 +926,6 @@ private:
                 throw std::runtime_error("failed to create synchronization objects!");
             }
         }
-
     }
 
     void drawFrame(){
@@ -977,7 +972,6 @@ private:
         vkQueueWaitIdle(presentQueue);
 
         currentFrame = (currentFrame+1)%MAX_FRAMES_IN_FLIGHT;
-
     }
 
 };
