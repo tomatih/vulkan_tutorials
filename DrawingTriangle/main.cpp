@@ -142,6 +142,8 @@ private:
 
 	void cleanup(){
         cleanupSwapChain();
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+        vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
         for(size_t i=0; i<MAX_FRAMES_IN_FLIGHT; i++){
             vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
             vkDestroySemaphore(device, imageAvaibleSemaphores[i], nullptr);
@@ -629,27 +631,13 @@ private:
         inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         inputAssembly.primitiveRestartEnable = VK_FALSE;
 
-        // viewport to framebuffer mapping
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = (float) swapChainExtent.width;
-        viewport.height = (float) swapChainExtent.height;
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-
-        // scissor rect
-        VkRect2D scissor{};
-        scissor.offset = {0, 0};
-        scissor.extent = swapChainExtent;
-
         // viewport and scissor combining (can use multiple on some GPU's but requires extension)
         VkPipelineViewportStateCreateInfo viewportState{};
         viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
         viewportState.viewportCount = 1;
-        viewportState.pViewports = &viewport;
+        viewportState.pViewports = nullptr; // Dynamic thus ignored
         viewportState.scissorCount = 1;
-        viewportState.pScissors = &scissor;
+        viewportState.pScissors = nullptr; // Dynamic thus ignored
 
         // rasterizer configorutaion
         VkPipelineRasterizationStateCreateInfo rasterizer{};
@@ -698,14 +686,15 @@ private:
         colorBlending.blendConstants[3] = 0.0f;
 
         //dynamic states if req
-        VkDynamicState dynamicStates[] = {
+        
+        std::vector<VkDynamicState> dynamicStates = {
             VK_DYNAMIC_STATE_VIEWPORT,
-            VK_DYNAMIC_STATE_LINE_WIDTH
+            VK_DYNAMIC_STATE_SCISSOR
         };
         VkPipelineDynamicStateCreateInfo dynamicState{};
         dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-        dynamicState.dynamicStateCount = 2;
-        dynamicState.pDynamicStates = dynamicStates;
+        dynamicState.dynamicStateCount = dynamicStates.size();
+        dynamicState.pDynamicStates = dynamicStates.data();
 
         // pipeline layout
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
@@ -730,7 +719,7 @@ private:
         pipelineInfo.pMultisampleState = &multisampling;
         pipelineInfo.pDepthStencilState = nullptr;
         pipelineInfo.pColorBlendState = &colorBlending;
-        pipelineInfo.pDynamicState = nullptr;//&dynamicState;
+        pipelineInfo.pDynamicState = &dynamicState;
         pipelineInfo.layout = pipelineLayout;
         pipelineInfo.renderPass = renderPass;
         pipelineInfo.subpass = 0;
@@ -888,6 +877,25 @@ private:
 
             vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
             vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+
+            // viewport to framebuffer mapping
+            VkViewport viewport{};
+            viewport.x = 0.0f;
+            viewport.y = 0.0f;
+            viewport.width = (float) swapChainExtent.width;
+            viewport.height = (float) swapChainExtent.height;
+            viewport.minDepth = 0.0f;
+            viewport.maxDepth = 1.0f;
+
+            vkCmdSetViewport(commandBuffers[i], 0, 1, &viewport);
+
+            // scissor rect
+            VkRect2D scissor{};
+            scissor.offset = {0, 0};
+            scissor.extent = swapChainExtent;
+
+            vkCmdSetScissor(commandBuffers[i], 0, 1, &scissor);
+
             vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
             vkCmdEndRenderPass(commandBuffers[i]);
 
@@ -924,7 +932,7 @@ private:
 
     void drawFrame(){
         vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
-        
+
         uint32_t imageIndex;
         VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvaibleSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
@@ -991,8 +999,6 @@ private:
             vkDestroyFramebuffer(device, framebuffer, nullptr);
         }
 
-        vkDestroyPipeline(device, graphicsPipeline, nullptr);
-        vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
         vkDestroyRenderPass(device, renderPass, nullptr);
 
         for(auto imageView : swapChainImageViews){
@@ -1010,7 +1016,6 @@ private:
         createSwapChain();
         createImageViews();
         createRenderPass();
-        createGraphicsPipeline();
         createFrameBuffers();
     }
 
