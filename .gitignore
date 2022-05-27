@@ -1,5 +1,7 @@
-# ignore c labguage server cache
+# ignore c language server
 .ccls-cache
+.cache
+compile_commands.json
 # ignore binaries
 *.out
 *.spv
