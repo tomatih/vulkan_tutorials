@@ -6,13 +6,17 @@ mainly from [this](https://vulkan-tutorial.com/) tutorial
 - [x] Introduction
 - [x] Overview
 - [x] Development environment
-- [ ] Drawing Triangle
+- [x] Drawing Triangle
 	- [x] Setup
 	- [x] Presentation
 	- [x] Graphics pipeline basics
 	- [x] Drawing
-	- [ ] Swap chain recreation
+	- [x] Swap chain recreation
 - [ ] Vertex buffers
+	- [ ] Vertex input description
+	- [ ] Vertex buffer creation
+	- [ ] Staging buffer
+	- [ ] Index buffer
 - [ ] Uniform buffers
 - [ ] Texture mapping
 - [ ] Depth buffering
