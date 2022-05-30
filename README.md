@@ -14,7 +14,7 @@ mainly from [this](https://vulkan-tutorial.com/) tutorial
 	- [x] Swap chain recreation
 - [ ] Vertex buffers
 	- [x] Vertex input description
-	- [ ] Vertex buffer creation
+	- [x] Vertex buffer creation
 	- [ ] Staging buffer
 	- [ ] Index buffer
 - [ ] Uniform buffers
