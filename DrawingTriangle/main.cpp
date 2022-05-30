@@ -1149,15 +1149,15 @@ private:
         bufferInfo.usage = usage;
         // queue sharing
         QueueFamilyIndicies indicies = findQueueFamilies(physicalDevice);
+        std::vector<uint32_t> families_with_acces = {
+                indicies.graphicsFamily.value(),
+                indicies.transferFamily.value()
+        };
         if(indicies.graphicsFamily.value() == indicies.transferFamily.value()){
             bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         }
         else{
             bufferInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
-            std::vector<uint32_t> families_with_acces = {
-                indicies.graphicsFamily.value(),
-                indicies.transferFamily.value()
-            };
             bufferInfo.queueFamilyIndexCount = static_cast<uint32_t>(families_with_acces.size());
             bufferInfo.pQueueFamilyIndices = families_with_acces.data();
         }
