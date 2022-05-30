@@ -15,7 +15,7 @@ mainly from [this](https://vulkan-tutorial.com/) tutorial
 - [ ] Vertex buffers
 	- [x] Vertex input description
 	- [x] Vertex buffer creation
-	- [ ] Staging buffer
+	- [x] Staging buffer
 	- [ ] Index buffer
 - [ ] Uniform buffers
 - [ ] Texture mapping
