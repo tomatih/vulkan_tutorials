@@ -453,6 +453,11 @@ private:
             i++;
         }
 
+        // check for integrated GPU's
+        if(!indicies.transferFamily.has_value() && indicies.graphicsFamily.has_value()){
+            indicies.transferFamily = indicies.graphicsFamily.value();
+        }
+
         //std::cout<<indicies.graphicsFamily.value()<<" "<<indicies.presentFamily.value()<<" "<<indicies.transferFamily.value()<<std::endl;
         return indicies;
     }
@@ -1142,15 +1147,21 @@ private:
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufferInfo.size = size;
         bufferInfo.usage = usage;
-        bufferInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
         // queue sharing
         QueueFamilyIndicies indicies = findQueueFamilies(physicalDevice);
-        std::vector<uint32_t> families_with_acces = {
-            indicies.graphicsFamily.value(),
-            indicies.transferFamily.value()
-        };
-        bufferInfo.queueFamilyIndexCount = static_cast<uint32_t>(families_with_acces.size());
-        bufferInfo.pQueueFamilyIndices = families_with_acces.data();
+        if(indicies.graphicsFamily.value() == indicies.transferFamily.value()){
+            bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        }
+        else{
+            bufferInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
+            std::vector<uint32_t> families_with_acces = {
+                indicies.graphicsFamily.value(),
+                indicies.transferFamily.value()
+            };
+            bufferInfo.queueFamilyIndexCount = static_cast<uint32_t>(families_with_acces.size());
+            bufferInfo.pQueueFamilyIndices = families_with_acces.data();
+        }
+        
 
 
         if(vkCreateBuffer(device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS){
