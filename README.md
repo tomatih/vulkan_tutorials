@@ -13,7 +13,7 @@ mainly from [this](https://vulkan-tutorial.com/) tutorial
 	- [x] Drawing
 	- [x] Swap chain recreation
 - [ ] Vertex buffers
-	- [ ] Vertex input description
+	- [x] Vertex input description
 	- [ ] Vertex buffer creation
 	- [ ] Staging buffer
 	- [ ] Index buffer

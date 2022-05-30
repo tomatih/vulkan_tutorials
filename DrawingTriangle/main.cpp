@@ -1,3 +1,6 @@
+#include <array>
+#include <cstddef>
+#include <glm/fwd.hpp>
 #include <vulkan/vulkan_core.h>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -13,6 +16,7 @@
 #include <cstdint>
 #include <algorithm>
 #include <fstream>
+#include <glm/glm.hpp>
 
 #include "ezprint.hpp"
 
@@ -45,6 +49,36 @@ struct SwapChainSupportDetails{
     VkSurfaceCapabilitiesKHR capabilities;
     std::vector<VkSurfaceFormatKHR> formats;
     std::vector<VkPresentModeKHR> presentModes;
+};
+
+struct Vertex{
+    glm::vec2 pos;
+    glm::vec3 color;
+
+    static VkVertexInputBindingDescription getBindingDescripton(){
+        VkVertexInputBindingDescription bindingDescription{};
+        bindingDescription.binding = 0;
+        bindingDescription.stride = sizeof(Vertex);
+        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+        return bindingDescription;
+    }
+
+    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptons(){
+        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+
+        attributeDescriptions[0].binding = 0;
+        attributeDescriptions[0].location = 0;
+        attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[0].offset = offsetof(Vertex, pos);
+
+        attributeDescriptions[1].binding = 0;
+        attributeDescriptions[1].location = 1;
+        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[1].offset = offsetof(Vertex, color);
+
+        return attributeDescriptions;
+    }
 };
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -101,6 +135,12 @@ private:
     std::vector<VkFence> imagesInFlight;
     size_t currentFrame = 0;
     bool framebufferResized = false;
+
+    const std::vector<Vertex> vertices = {
+        {{ 0.0f, -0.5f}, {1.0f,0.0f,0.0f}},
+        {{ 0.5f,  0.5f}, {0.0f,1.0f,0.0f}},
+        {{-0.5f,  0.5f}, {0.0f,0.0f,1.0f}},
+    };
 
 
 	void initWindow(){
@@ -618,13 +658,16 @@ private:
         // combine
         VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
-        // vertex data handling (we have none)
+        // vertex data handling
+        auto bindingDescription = Vertex::getBindingDescripton();
+        auto attributeDesccriptions = Vertex::getAttributeDescriptons();
+
         VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputInfo.vertexBindingDescriptionCount = 0;
-        vertexInputInfo.pVertexBindingDescriptions = nullptr;
-        vertexInputInfo.vertexAttributeDescriptionCount = 0;
-        vertexInputInfo.pVertexAttributeDescriptions = nullptr;
+        vertexInputInfo.vertexBindingDescriptionCount = 1;
+        vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDesccriptions.size());
+        vertexInputInfo.pVertexAttributeDescriptions = attributeDesccriptions.data();
 
         VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
         inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -1028,6 +1071,7 @@ private:
     }
 
 };
+
 
 int main(){
 	HelloTriangleApplication app;
