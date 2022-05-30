@@ -12,11 +12,11 @@ mainly from [this](https://vulkan-tutorial.com/) tutorial
 	- [x] Graphics pipeline basics
 	- [x] Drawing
 	- [x] Swap chain recreation
-- [ ] Vertex buffers
+- [x] Vertex buffers
 	- [x] Vertex input description
 	- [x] Vertex buffer creation
 	- [x] Staging buffer
-	- [ ] Index buffer
+	- [x] Index buffer
 - [ ] Uniform buffers
 - [ ] Texture mapping
 - [ ] Depth buffering
