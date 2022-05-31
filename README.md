@@ -18,6 +18,8 @@ mainly from [this](https://vulkan-tutorial.com/) tutorial
 	- [x] Staging buffer
 	- [x] Index buffer
 - [ ] Uniform buffers
+	- [x] Descriptor layout and buffer
+	- [ ] Descriptor pool and sets
 - [ ] Texture mapping
 - [ ] Depth buffering
 - [ ] Loading models
