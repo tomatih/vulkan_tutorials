@@ -23,8 +23,8 @@ mainly from [this](https://vulkan-tutorial.com/) tutorial
 - [ ] Texture mapping
 	- [x] Images
 		- [ ] command buffer challange
-	- [ ] Image views and sampler
-	- [ ] Combined image sampler
+	- [x] Image views and sampler
+	- [x] Combined image sampler
 - [ ] Depth buffering
 - [ ] Loading models
 - [ ] Generating Mipmaps
