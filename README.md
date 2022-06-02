@@ -21,6 +21,10 @@ mainly from [this](https://vulkan-tutorial.com/) tutorial
 	- [x] Descriptor layout and buffer
 	- [x] Descriptor pool and sets
 - [ ] Texture mapping
+	- [x] Images
+		- [ ] command buffer challange
+	- [ ] Image views and sampler
+	- [ ] Combined image sampler
 - [ ] Depth buffering
 - [ ] Loading models
 - [ ] Generating Mipmaps
