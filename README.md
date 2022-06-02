@@ -22,7 +22,6 @@ mainly from [this](https://vulkan-tutorial.com/) tutorial
 	- [x] Descriptor pool and sets
 - [ ] Texture mapping
 	- [x] Images
-		- [ ] command buffer challange
 	- [x] Image views and sampler
 	- [x] Combined image sampler
 - [ ] Depth buffering
