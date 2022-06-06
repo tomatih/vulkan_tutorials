@@ -404,6 +404,10 @@ private:
         void* pUSerData)
         {
 
+        (void) messageSeverity;
+        (void) messageType;
+        (void) pUSerData;
+
         std::cerr<<"validation layer: "<< pCallbackData->pMessage<<std::endl;
 
         return VK_FALSE;
@@ -1171,6 +1175,9 @@ private:
     }
 
     static void framebufferResizeCallback(GLFWwindow* window, int width, int height){
+        (void) width;
+        (void) height;
+
         auto app = reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window));
         app->framebufferResized = true;
     }
@@ -1462,12 +1469,12 @@ private:
             textureImageMemory
         );
 
-        transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        transitionImageLayout(textureImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
         copyBufferToImage(setupStagingBuffer[offset], textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-        transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        transitionImageLayout(textureImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     }
 
-    void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout){
+    void transitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout){
         VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         barrier.oldLayout = oldLayout;
