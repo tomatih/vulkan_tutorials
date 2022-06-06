@@ -1,7 +1,7 @@
 EXTERNAL_LIBRARIES_PATH = libraries
 
-CFLAGS = -std=c++2a -O7 -g -Wall -I$(EXTERNAL_LIBRARIES_PATH)
-LDFLAGS = -lglfw -lvulkan -ldl -lpthread -lX11 -lXxf86vm -lXrandr -lXi
+CFLAGS = -std=c++2a -O2 -g -Wall -I$(EXTERNAL_LIBRARIES_PATH)
+LDFLAGS = -lglfw -lvulkan -ldl -lpthread -lX11 -lXrandr -lXi
 
 DrawingTriangle: main.cpp
 	glslc shaders/shader.vert -o vert.spv

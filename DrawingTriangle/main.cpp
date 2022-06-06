@@ -456,7 +456,7 @@ private:
             return 0;
         }
 
-        if(indicies.graphicsFamily.value() == indicies.presentFamily){
+        if(indicies.graphicsFamily.value() != indicies.presentFamily){
             score += 100;
         }
 
