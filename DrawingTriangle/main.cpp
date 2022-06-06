@@ -172,6 +172,9 @@ private:
     VkDeviceMemory textureImageMemory;
     VkImageView textureImageView;
     VkSampler textureSampler;
+    std::vector<VkBuffer> setupStagingBuffer;
+    std::vector<VkDeviceMemory> setupStagingBufferMemory;
+    std::vector<VkCommandBuffer> setupCommandBuffers;
 
     const std::vector<Vertex> vertices = {
         {{-0.5f, -0.5f}, {1.0f,0.0f,0.0f}, {1.0f,0.0f}},
@@ -209,6 +212,7 @@ private:
         createGraphicsPipeline();
         createFrameBuffers();
         createCommandPools();
+        startSetupCommandBuffers();
         createTextureImage();
         createTextureImageView();
         createTextureSampler();
@@ -217,6 +221,7 @@ private:
         createUniformBuffers();
         createDescriptorPool();
         createDescriptorSets();
+        flushSetupCommandBuffers();
         createCommandBuffers();
         createSyncObjects();
     }
@@ -1226,61 +1231,42 @@ private:
     }
 
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size){
-        VkCommandBuffer commandBuffer = beginSingleTimeCommands(transferCommandPool);
-
         VkBufferCopy copyRegion{};
         copyRegion.srcOffset = 0;
         copyRegion.dstOffset = 0;
         copyRegion.size = size;
-        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
-
-        endSingleTimeCommands(commandBuffer, transferQueue,transferCommandPool);
+        vkCmdCopyBuffer(setupCommandBuffers[1], srcBuffer, dstBuffer, 1, &copyRegion);
         
     }
 
     void createVertexBuffer(){
         VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-
-        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
+        size_t offset = getNewSetupStagingBuffer(bufferSize);
 
         void* data;
-        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        vkMapMemory(device, setupStagingBufferMemory[offset], 0, bufferSize, 0, &data);
         memcpy(data, vertices.data(), (size_t)bufferSize);
-        vkUnmapMemory(device, stagingBufferMemory);
+        vkUnmapMemory(device, setupStagingBufferMemory[offset]);
 
         createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
 
-        copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
-
-        vkDestroyBuffer(device, stagingBuffer, nullptr);
-        vkFreeMemory(device, stagingBufferMemory, nullptr);
+        copyBuffer(setupStagingBuffer[offset], vertexBuffer, bufferSize);
     }
 
     void createIndexBuffer(){
         VkDeviceSize bufferSize = sizeof(indicies[0]) * indicies.size();
 
-
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-
-        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
+        size_t offset = getNewSetupStagingBuffer(bufferSize);
 
         void* data;
-        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        vkMapMemory(device, setupStagingBufferMemory[offset], 0, bufferSize, 0, &data);
         memcpy(data, indicies.data(), (size_t)bufferSize);
-        vkUnmapMemory(device, stagingBufferMemory);
+        vkUnmapMemory(device, setupStagingBufferMemory[offset]);
 
         createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
 
-        copyBuffer(stagingBuffer, indexBuffer, bufferSize);
-
-        vkDestroyBuffer(device, stagingBuffer, nullptr);
-        vkFreeMemory(device, stagingBufferMemory, nullptr);
+        copyBuffer(setupStagingBuffer[offset], indexBuffer, bufferSize);
     }
 
     void createDescriptorSetLayout(){
@@ -1456,15 +1442,12 @@ private:
             throw std::runtime_error("failed to load texture image!");
         }
 
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-
-        createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+        size_t offset = getNewSetupStagingBuffer(imageSize);
 
         void* data;
-        vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
+        vkMapMemory(device, setupStagingBufferMemory[offset], 0, imageSize, 0, &data);
         memcpy(data, pixels, static_cast<size_t>(imageSize));
-        vkUnmapMemory(device, stagingBufferMemory);
+        vkUnmapMemory(device, setupStagingBufferMemory[offset]);
 
         stbi_image_free(pixels);
 
@@ -1480,49 +1463,11 @@ private:
         );
 
         transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        copyBufferToImage(stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+        copyBufferToImage(setupStagingBuffer[offset], textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
         transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-        vkDestroyBuffer(device, stagingBuffer, nullptr);
-        vkFreeMemory(device, stagingBufferMemory, nullptr);
-    }
-
-    VkCommandBuffer beginSingleTimeCommands(VkCommandPool pool){
-        VkCommandBufferAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool = pool;
-        allocInfo.commandBufferCount = 1;
-
-        VkCommandBuffer commandBuffer;
-        vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
-
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        
-        vkBeginCommandBuffer(commandBuffer, &beginInfo);
-
-        return commandBuffer;
-    }
-
-    void endSingleTimeCommands(VkCommandBuffer commandBuffer,VkQueue queue, VkCommandPool pool){
-        vkEndCommandBuffer(commandBuffer);
-
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffer;
-
-        vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
-        vkQueueWaitIdle(queue);
-
-        vkFreeCommandBuffers(device, pool, 1, &commandBuffer);
     }
 
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout){
-        VkCommandBuffer commandBuffer = beginSingleTimeCommands(graphicsCommandPool);
-
         VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         barrier.oldLayout = oldLayout;
@@ -1538,6 +1483,7 @@ private:
 
         VkPipelineStageFlags sourceStage;
         VkPipelineStageFlags destinationStage;
+        VkCommandBuffer barrieredCommandBuffer;
 
         if(oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL){
             barrier.srcAccessMask = 0;
@@ -1545,32 +1491,32 @@ private:
 
             sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
             destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
+            barrieredCommandBuffer = setupCommandBuffers[0];
         }
         else if(oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL){
             barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
             barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
             sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-            destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            destinationStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+
+            barrieredCommandBuffer = setupCommandBuffers[1];
         }
         else{
             throw std::runtime_error("unsuportted layout transition!");
         }
 
-        vkCmdPipelineBarrier(commandBuffer, 
+        vkCmdPipelineBarrier(barrieredCommandBuffer, 
             sourceStage, destinationStage, 
             0, 
             0, nullptr, 
             0, nullptr, 
             1, &barrier
         );
-
-        endSingleTimeCommands(commandBuffer, graphicsQueue, graphicsCommandPool);
     }
 
     void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height){
-        VkCommandBuffer commandBuffer = beginSingleTimeCommands(transferCommandPool);
-
         VkBufferImageCopy region{};
         region.bufferOffset = 0;
         region.bufferRowLength = 0;
@@ -1584,9 +1530,7 @@ private:
         region.imageOffset = {0,0,0};
         region.imageExtent = { width, height, 1};
 
-        vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
-
-        endSingleTimeCommands(commandBuffer, transferQueue, transferCommandPool);
+        vkCmdCopyBufferToImage(setupCommandBuffers[1], buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
     }
 
     VkImageView createImageView(VkImage image, VkFormat format){
@@ -1641,6 +1585,86 @@ private:
         if(vkCreateSampler(device, &samplerInfo, nullptr, &textureSampler)!=VK_SUCCESS){
             throw std::runtime_error("failed to create texture sampler!");
         }
+    }
+
+    void startSetupCommandBuffers(){
+        setupCommandBuffers.resize(2);
+
+        // Graphics command buffer
+        VkCommandBufferAllocateInfo allocInfoGraphics{};
+        allocInfoGraphics.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfoGraphics.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfoGraphics.commandPool = graphicsCommandPool;
+        allocInfoGraphics.commandBufferCount = 1;
+
+        vkAllocateCommandBuffers(device, &allocInfoGraphics, &setupCommandBuffers[0]);
+
+        VkCommandBufferBeginInfo beginInfoGraphics{};
+        beginInfoGraphics.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfoGraphics.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        
+        vkBeginCommandBuffer(setupCommandBuffers[0], &beginInfoGraphics);
+
+        // Transfer command buffer
+        VkCommandBufferAllocateInfo allocInfoTransfer{};
+        allocInfoTransfer.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfoTransfer.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfoTransfer.commandPool = transferCommandPool;
+        allocInfoTransfer.commandBufferCount = 1;
+
+        vkAllocateCommandBuffers(device, &allocInfoTransfer, &setupCommandBuffers[1]);
+
+        VkCommandBufferBeginInfo beginInfoTransfer{};
+        beginInfoTransfer.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfoTransfer.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        
+        vkBeginCommandBuffer(setupCommandBuffers[1], &beginInfoTransfer);
+    }
+
+    void flushSetupCommandBuffers(){
+        // Graphics
+        vkEndCommandBuffer(setupCommandBuffers[0]);
+
+        VkSubmitInfo submitInfoGraphics{};
+        submitInfoGraphics.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfoGraphics.commandBufferCount = 1;
+        submitInfoGraphics.pCommandBuffers = &setupCommandBuffers[0];
+
+        vkQueueSubmit(graphicsQueue, 1, &submitInfoGraphics, VK_NULL_HANDLE);
+        vkQueueWaitIdle(graphicsQueue);
+
+        vkFreeCommandBuffers(device, graphicsCommandPool, 1, &setupCommandBuffers[0]);
+
+        // Transfer
+        vkEndCommandBuffer(setupCommandBuffers[1]);
+
+        VkSubmitInfo submitInfoTransfer{};
+        submitInfoTransfer.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfoTransfer.commandBufferCount = 1;
+        submitInfoTransfer.pCommandBuffers = &setupCommandBuffers[1];
+
+        vkQueueSubmit(transferQueue, 1, &submitInfoTransfer, VK_NULL_HANDLE);
+        vkQueueWaitIdle(transferQueue);
+
+        vkFreeCommandBuffers(device, transferCommandPool, 1, &setupCommandBuffers[1]);
+
+        // Staging
+        for(size_t i=0; i<setupStagingBuffer.size(); i++){
+            vkDestroyBuffer(device, setupStagingBuffer[i], nullptr);
+            vkFreeMemory(device, setupStagingBufferMemory[i], nullptr);
+        }
+    }
+
+    size_t getNewSetupStagingBuffer(VkDeviceSize bufferSize){
+        size_t offset = setupStagingBuffer.size();
+
+        setupStagingBuffer.resize(offset+1);
+        setupStagingBufferMemory.resize(offset+1);
+
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            setupStagingBuffer[offset], setupStagingBufferMemory[offset]);
+
+        return offset;
     }
 
 };
