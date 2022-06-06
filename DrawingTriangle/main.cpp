@@ -172,6 +172,9 @@ private:
     VkDeviceMemory textureImageMemory;
     VkImageView textureImageView;
     VkSampler textureSampler;
+    std::vector<VkBuffer> setupStagingBuffer;
+    std::vector<VkDeviceMemory> setupStagingBufferMemory;
+    std::vector<VkCommandBuffer> setupCommandBuffers;
 
     const std::vector<Vertex> vertices = {
         {{-0.5f, -0.5f}, {1.0f,0.0f,0.0f}, {1.0f,0.0f}},
@@ -1641,6 +1644,86 @@ private:
         if(vkCreateSampler(device, &samplerInfo, nullptr, &textureSampler)!=VK_SUCCESS){
             throw std::runtime_error("failed to create texture sampler!");
         }
+    }
+
+    void startSetupCommandBuffers(){
+        setupCommandBuffers.resize(2);
+
+        // Graphics command buffer
+        VkCommandBufferAllocateInfo allocInfoGraphics{};
+        allocInfoGraphics.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfoGraphics.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfoGraphics.commandPool = graphicsCommandPool;
+        allocInfoGraphics.commandBufferCount = 1;
+
+        vkAllocateCommandBuffers(device, &allocInfoGraphics, &setupCommandBuffers[0]);
+
+        VkCommandBufferBeginInfo beginInfoGraphics{};
+        beginInfoGraphics.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfoGraphics.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        
+        vkBeginCommandBuffer(setupCommandBuffers[0], &beginInfoGraphics);
+
+        // Transfer command buffer
+        VkCommandBufferAllocateInfo allocInfoTransfer{};
+        allocInfoTransfer.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfoTransfer.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfoTransfer.commandPool = transferCommandPool;
+        allocInfoTransfer.commandBufferCount = 1;
+
+        vkAllocateCommandBuffers(device, &allocInfoTransfer, &setupCommandBuffers[1]);
+
+        VkCommandBufferBeginInfo beginInfoTransfer{};
+        beginInfoTransfer.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfoTransfer.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        
+        vkBeginCommandBuffer(setupCommandBuffers[1], &beginInfoTransfer);
+    }
+
+    void flushSetupCommandBuffers(){
+        // Graphics
+        vkEndCommandBuffer(setupCommandBuffers[0]);
+
+        VkSubmitInfo submitInfoGraphics{};
+        submitInfoGraphics.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfoGraphics.commandBufferCount = 1;
+        submitInfoGraphics.pCommandBuffers = &setupCommandBuffers[0];
+
+        vkQueueSubmit(graphicsQueue, 1, &submitInfoGraphics, VK_NULL_HANDLE);
+        vkQueueWaitIdle(graphicsQueue);
+
+        vkFreeCommandBuffers(device, graphicsCommandPool, 1, &setupCommandBuffers[0]);
+
+        // Transfer
+        vkEndCommandBuffer(setupCommandBuffers[1]);
+
+        VkSubmitInfo submitInfoTransfer{};
+        submitInfoTransfer.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfoTransfer.commandBufferCount = 1;
+        submitInfoTransfer.pCommandBuffers = &setupCommandBuffers[1];
+
+        vkQueueSubmit(transferQueue, 1, &submitInfoTransfer, VK_NULL_HANDLE);
+        vkQueueWaitIdle(transferQueue);
+
+        vkFreeCommandBuffers(device, transferCommandPool, 1, &setupCommandBuffers[1]);
+
+        // Staging
+        for(size_t i=0; i<setupStagingBuffer.size(); i++){
+            vkDestroyBuffer(device, setupStagingBuffer[i], nullptr);
+            vkFreeMemory(device, setupStagingBufferMemory[i], nullptr);
+        }
+    }
+
+    size_t getNewSetupStagingBuffer(VkDeviceSize bufferSize){
+        size_t offset = setupStagingBuffer.size();
+
+        setupStagingBuffer.resize(offset+1);
+        setupStagingBufferMemory.resize(offset+1);
+
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            setupStagingBuffer[offset], setupStagingBufferMemory[offset]);
+
+        return offset;
     }
 
 };
