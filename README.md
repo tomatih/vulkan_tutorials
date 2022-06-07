@@ -20,12 +20,12 @@ mainly from [this](https://vulkan-tutorial.com/) tutorial
 - [x] Uniform buffers
 	- [x] Descriptor layout and buffer
 	- [x] Descriptor pool and sets
-- [ ] Texture mapping
+- [x] Texture mapping
 	- [x] Images
 		- [x] unified Setup command buffers challange
 	- [x] Image views and sampler
 	- [x] Combined image sampler
-- [ ] Depth buffering
+- [x] Depth buffering
 - [ ] Loading models
 - [ ] Generating Mipmaps
 - [ ] Multisampling
