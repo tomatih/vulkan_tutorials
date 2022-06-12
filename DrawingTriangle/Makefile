@@ -1,6 +1,6 @@
 EXTERNAL_LIBRARIES_PATH = libraries
 
-CFLAGS = -std=c++2a -O2 -g -Wall -Wextra -I$(EXTERNAL_LIBRARIES_PATH)
+CFLAGS = -std=c++2a -O3 -g -Wall -Wextra -I$(EXTERNAL_LIBRARIES_PATH)
 LDFLAGS = -lglfw -lvulkan -ldl -lpthread -lX11 -lXrandr -lXi
 
 DrawingTriangle: main.cpp
