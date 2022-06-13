@@ -27,5 +27,5 @@ mainly from [this](https://vulkan-tutorial.com/) tutorial
 	- [x] Combined image sampler
 - [x] Depth buffering
 - [x] Loading models
-- [ ] Generating Mipmaps
+- [x] Generating Mipmaps
 - [ ] Multisampling
