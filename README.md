@@ -28,4 +28,4 @@ mainly from [this](https://vulkan-tutorial.com/) tutorial
 - [x] Depth buffering
 - [x] Loading models
 - [x] Generating Mipmaps
-- [ ] Multisampling
+- [x] Multisampling
