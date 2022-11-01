@@ -1,6 +1,7 @@
 #pragma once
 
 #include "lve_window.hpp"
+#include "lve_pipeline.hpp"
 
 namespace lve {
 class FirstApp{
@@ -15,5 +16,6 @@ public:
 private:
 	// our window object created on instance
 	LveWindow lveWindow{WIDTH, HEIGHT, "Hello Vulkan!"};
+	LvePipeline lvePileline{"shaders/simple_shader.vert.spv","shaders/simple_shader.frag.spv"};
 };
 }
