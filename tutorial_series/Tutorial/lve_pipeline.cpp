@@ -74,13 +74,22 @@ void LvePipeline::createGraphicsPipeline(const std::string& vertFilePath, const 
 		.pVertexAttributeDescriptions = nullptr,
 	};
 
+	// viewport and scissor package
+	VkPipelineViewportStateCreateInfo viewportInfo{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+		.viewportCount = 1,
+		.pViewports = &configInfo.viewPort,
+		.scissorCount = 1,
+		.pScissors = &configInfo.scissor
+	};
+
 	VkGraphicsPipelineCreateInfo pipelineInfo{
 		.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
 		.stageCount = 2,
 		.pStages = shaderStages,
 		.pVertexInputState = &vertexInputInfo,
 		.pInputAssemblyState = &configInfo.inputAssemblyInfo,
-		.pViewportState = &configInfo.viewportInfo,
+		.pViewportState = &viewportInfo,
 		.pRasterizationState = &configInfo.rasterizationInfo,
 		.pMultisampleState = &configInfo.multisampleInfo,
 		.pDepthStencilState = &configInfo.depthStencilInfo,
@@ -139,14 +148,6 @@ PipelineConfigInfo LvePipeline::defaultPipelineConfngInfo(uint32_t width, uint32
 		.scissor{
 			.offset = {0, 0},
 			.extent = {width, height}
-		},
-		// viewport and scissor package
-		.viewportInfo{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-			.viewportCount = 1,
-			.pViewports = &configInfo.viewPort,
-			.scissorCount = 1,
-			.pScissors = &configInfo.scissor
 		},
 		// first stage of the pipeline (ordering data into vertexes)
 		.inputAssemblyInfo {
