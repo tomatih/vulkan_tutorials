@@ -10,7 +10,18 @@
 namespace lve {
 
 struct PipelineConfigInfo {
-
+	VkViewport viewPort;
+	VkRect2D scissor;
+	VkPipelineViewportStateCreateInfo viewportInfo;
+	VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
+	VkPipelineRasterizationStateCreateInfo rasterizationInfo;
+	VkPipelineMultisampleStateCreateInfo multisampleInfo;
+	VkPipelineColorBlendAttachmentState colorBlendAttachment;
+	VkPipelineColorBlendStateCreateInfo colorBlendInfo;
+	VkPipelineDepthStencilStateCreateInfo depthStencilInfo;
+	VkPipelineLayout pipelineLayout = nullptr;
+	VkRenderPass renderPass = nullptr;
+	uint32_t subpass = 0;
 };
 
 class LvePipeline{
@@ -18,7 +29,7 @@ public:
 	// simple constructot
 	LvePipeline(LveDevice &device, const std::string& vertFilePath, const std::string& fragFilePath, const PipelineConfigInfo& configInfo);
 
-	~LvePipeline() {};
+	~LvePipeline();
 
 	// delete copy constructors to prevent vulkan pointer duplication
 	LvePipeline(const LvePipeline&) = delete;
