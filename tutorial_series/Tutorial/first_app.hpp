@@ -39,7 +39,7 @@ private:
 
 	void createPipelineLayout();
 	void createPipeline();
-	void createCommandBuffers(){};
-	void drawFrame(){};
+	void createCommandBuffers();
+	void drawFrame();
 };
 }

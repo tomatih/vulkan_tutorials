@@ -34,6 +34,8 @@ public:
 	LvePipeline(const LvePipeline&) = delete;
 	void operator=(const LvePipeline&) = delete;
 
+	void bind(VkCommandBuffer commandBuffer);
+
 	// default config
 	static PipelineConfigInfo defaultPipelineConfngInfo(uint32_t width, uint32_t height);
 
