@@ -1,5 +1,6 @@
 #include "lve_pipeline.hpp"
 #include <cstddef>
+#include <cstdint>
 #include <ios>
 #include <ostream>
 #include <string>
@@ -7,6 +8,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <iostream>
+#include <vulkan/vulkan_core.h>
 
 namespace lve {
 
@@ -31,7 +33,7 @@ std::vector<char> LvePipeline::readFile(const std::string& fileName){
 	return buffer;
 }
 
-void LvePipeline::createGraphicsPipeline(const std::string& vertFilePath, const std::string& fragFilePath){
+void LvePipeline::createGraphicsPipeline(const std::string& vertFilePath, const std::string& fragFilePath, const PipelineConfigInfo& configInfo){
 	// read the compiled shader files
 	auto fragCode = readFile(fragFilePath);
 	auto vertCode = readFile(vertFilePath);
@@ -40,8 +42,27 @@ void LvePipeline::createGraphicsPipeline(const std::string& vertFilePath, const 
 	std::cout << "Fragment shader size: " << fragCode.size()<<std::endl;
 }
 
-LvePipeline::LvePipeline(const std::string& vertFilePath, const std::string& fragFilePath){
-	createGraphicsPipeline(vertFilePath, fragFilePath);
+LvePipeline::LvePipeline(LveDevice &device, const std::string& vertFilePath, const std::string& fragFilePath, const PipelineConfigInfo& configInfo): lveDevice(device){
+	createGraphicsPipeline(vertFilePath, fragFilePath, configInfo);
+}
+
+void LvePipeline::createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule){
+	VkShaderModuleCreateInfo createInfo {
+		.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+		.codeSize = code.size(),
+		.pCode = reinterpret_cast<const uint32_t*>(code.data())
+	};
+
+	if(vkCreateShaderModule(lveDevice.device(), &createInfo, nullptr, shaderModule)){
+		throw std::runtime_error("Failed to create shader module");
+	}
+
+}
+
+PipelineConfigInfo LvePipeline::defaultPipelineConfngInfo(uint32_t width, uint32_t height){
+	PipelineConfigInfo configInfo{};
+
+	return configInfo;
 }
 
 }
