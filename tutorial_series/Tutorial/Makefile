@@ -8,7 +8,7 @@ Tutorial: *.cpp *.hpp
 .PHONY: test clean
 
 test: Tutorial
-	./Tutorial.out
+	VK_INSTANCE_LAYERS=VK_LAYER_MESA_overlay VK_LAYER_MESA_OVERLAY_CONFIG=position=top-left ./Tutorial.out
 
 clean:
 	rm -r Tutorial.out
