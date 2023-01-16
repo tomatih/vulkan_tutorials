@@ -127,12 +127,46 @@ void FirstApp::drawFrame(){
 	}
 }
 
+LveModel::Vertex getMidpoint(LveModel::Vertex a, LveModel::Vertex b){
+	return {
+		{
+			(a.position.x + b.position.x)/2, 
+			(a.position.y + b.position.y)/2}
+	};
+}
+
+std::vector<LveModel::Vertex> subdivide(std::vector<LveModel::Vertex> original){
+	LveModel::Vertex Ap = getMidpoint(original[0], original[1]);
+	LveModel::Vertex Bp = getMidpoint(original[1], original[2]);
+	LveModel::Vertex Cp = getMidpoint(original[2], original[0]);
+
+	return {original[0],Ap,Cp, Cp,Bp,original[2], Ap,original[1],Bp};
+}
+
+std::vector<LveModel::Vertex> generateSierpinski(const std::vector<LveModel::Vertex> &original){
+	std::vector<LveModel::Vertex> out(original.size()*3);
+
+	for(int i=0; i<original.size()/3; i++){
+		std::vector<LveModel::Vertex> old_triangle = { original[i*3], original[i*3+1], original[i*3+2]};
+		auto new_triangle = subdivide(old_triangle);
+		for(int j=0; j<new_triangle.size(); j++){
+			out[i*9+j] = new_triangle[j];
+		}
+	}
+
+	return out;
+}
+
 void FirstApp::loadModels(){
 	std::vector<LveModel::Vertex> verticies = {
-		{{ 0.0f, -0.5f}},
-		{{ 0.5f,  0.5f}},
-		{{-0.5f,  0.5f}}
+		{{ 0.0f, -0.9f}},
+		{{ 0.9f,  0.9f}},
+		{{-0.9f,  0.9f}}
 	};
+
+	for(int i=0; i<7; i++){
+		verticies = generateSierpinski(verticies);
+	}
 
 	lveModel = std::make_unique<LveModel>(lveDevice, verticies);
 
