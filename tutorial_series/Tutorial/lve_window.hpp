@@ -21,16 +21,20 @@ public:
 	// glfw window forward
 	bool shouldClose(){ return  glfwWindowShouldClose(window);}
 	VkExtent2D getExtent() {return {static_cast<uint32_t>(width), static_cast<uint32_t>(height)}; };
+	bool wasWindowResized() {return framebufferResised;};
+	void resetWindowResizedFlag() {framebufferResised = false;};
 
 	void createWindowSurface(VkInstance instance, VkSurfaceKHR *surface);
 
 private:
 	// simple window initialization
 	void initWindow();
+	static void framebufferResizeCalllback(GLFWwindow *window, int width, int height);
 
 	// window parameters
-	const int width;  // cosnt for now resizing is a headache for later
-	const int height; // cosnt for now resizing is a headache for later
+	int width;  // cosnt for now resizing is a headache for later
+	int height; // cosnt for now resizing is a headache for later
+	bool framebufferResised = false;
 	std::string windowName;
 
 	// pointer to the actual window object
