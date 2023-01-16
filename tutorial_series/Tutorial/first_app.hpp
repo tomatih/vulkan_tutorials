@@ -8,6 +8,7 @@
 #include "lve_pipeline.hpp"
 #include "lve_device.hpp"
 #include "lve_swap_chain.hpp"
+#include "lve_model.hpp"
 
 namespace lve {
 class FirstApp{
@@ -32,14 +33,15 @@ private:
 	LveWindow lveWindow{WIDTH, HEIGHT, "Hello Vulkan!"};
 	LveDevice lveDevice{lveWindow};
 	LveSwapChain lveSwapChain{lveDevice, lveWindow.getExtent()};
-	//LvePipeline lvePileline{lveDevice,"shaders/simple_shader.vert.spv","shaders/simple_shader.frag.spv",LvePipeline::defaultPipelineConfngInfo(WIDTH, HEIGHT)};
 	std::unique_ptr<LvePipeline> lvePipeline;
 	VkPipelineLayout pipelineLayout;
 	std::vector<VkCommandBuffer> commandBuffers;
+	std::unique_ptr<LveModel> lveModel;
 
 	void createPipelineLayout();
 	void createPipeline();
 	void createCommandBuffers();
 	void drawFrame();
+	void loadModels();
 };
 }

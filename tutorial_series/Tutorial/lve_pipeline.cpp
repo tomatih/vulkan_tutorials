@@ -11,6 +11,8 @@
 #include <cassert>
 #include <vulkan/vulkan_core.h>
 
+#include "lve_model.hpp"
+
 namespace lve {
 
 std::vector<char> LvePipeline::readFile(const std::string& fileName){
@@ -66,12 +68,14 @@ void LvePipeline::createGraphicsPipeline(const std::string& vertFilePath, const 
 		}
 	};
 
+	auto bindingDescriptions = LveModel::Vertex::getBindingDescriptions();
+	auto attributeDescriptions = LveModel::Vertex::getAttributeDescriptions();
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-		.vertexBindingDescriptionCount = 0,
-		.pVertexBindingDescriptions = nullptr,
-		.vertexAttributeDescriptionCount = 0,
-		.pVertexAttributeDescriptions = nullptr,
+		.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size()),
+		.pVertexBindingDescriptions = bindingDescriptions.data(),
+		.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size()),
+		.pVertexAttributeDescriptions = attributeDescriptions.data(),
 	};
 
 	// viewport and scissor package
