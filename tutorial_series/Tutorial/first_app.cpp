@@ -131,7 +131,13 @@ LveModel::Vertex getMidpoint(LveModel::Vertex a, LveModel::Vertex b){
 	return {
 		{
 			(a.position.x + b.position.x)/2, 
-			(a.position.y + b.position.y)/2}
+			(a.position.y + b.position.y)/2
+		},
+		{
+			(a.color.r+b.color.r)/2,
+			(a.color.g+b.color.g)/2,
+			(a.color.b+b.color.b)/2
+		}
 	};
 }
 
@@ -159,9 +165,9 @@ std::vector<LveModel::Vertex> generateSierpinski(const std::vector<LveModel::Ver
 
 void FirstApp::loadModels(){
 	std::vector<LveModel::Vertex> verticies = {
-		{{ 0.0f, -0.9f}},
-		{{ 0.9f,  0.9f}},
-		{{-0.9f,  0.9f}}
+		{{ 0.0f, -0.9f},{1.0f, 0.0f, 0.0f}},
+		{{ 0.9f,  0.9f},{0.0f, 1.0f, 0.0f}},
+		{{-0.9f,  0.9f},{0.0f, 0.0f, 1.0f}}
 	};
 
 	for(int i=0; i<7; i++){
