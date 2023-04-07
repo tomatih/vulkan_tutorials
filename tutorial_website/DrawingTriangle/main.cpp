@@ -29,7 +29,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
 #define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+#include <stb_image.hpp>
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 #include <unordered_map>
