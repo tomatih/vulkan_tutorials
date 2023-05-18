@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <glm/common.hpp>
 #include <glm/fwd.hpp>
@@ -259,10 +260,10 @@ std::vector<LveModel::Vertex> subdivide(std::vector<LveModel::Vertex> original){
 std::vector<LveModel::Vertex> generateSierpinski(const std::vector<LveModel::Vertex> &original){
 	std::vector<LveModel::Vertex> out(original.size()*3);
 
-	for(int i=0; i<original.size()/3; i++){
+	for(size_t i=0; i<original.size()/3; i++){
 		std::vector<LveModel::Vertex> old_triangle = { original[i*3], original[i*3+1], original[i*3+2]};
 		auto new_triangle = subdivide(old_triangle);
-		for(int j=0; j<new_triangle.size(); j++){
+		for(size_t j=0; j<new_triangle.size(); j++){
 			out[i*9+j] = new_triangle[j];
 		}
 	}
