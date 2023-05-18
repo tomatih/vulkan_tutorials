@@ -7,12 +7,21 @@
 #include <array>
 #include <cassert>
 #include <cstdint>
+#include <glm/fwd.hpp>
 #include <memory>
 #include <stdexcept>
 #include <vector>
 #include <vulkan/vulkan_core.h>
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
 
 namespace lve {
+
+struct SimplePushConstantData {
+	glm::vec2 offset;
+	alignas(16) glm::vec3 color;
+};
 
 FirstApp::FirstApp(){
 	loadModels();
@@ -37,13 +46,21 @@ void FirstApp::run(){
 }
 
 void FirstApp::createPipelineLayout(){
+
+	VkPushConstantRange pushConstantRange{
+		.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+		.offset = 0,
+		.size = sizeof(SimplePushConstantData),
+	};
+
+
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
 		// passing info like textures, UOB, ect
 		.setLayoutCount = 0,
 		.pSetLayouts = nullptr,
-		.pushConstantRangeCount = 0,
-		.pPushConstantRanges = nullptr,
+		.pushConstantRangeCount = 1,
+		.pPushConstantRanges = &pushConstantRange,
 	};
 
 	if(vkCreatePipelineLayout(lveDevice.device(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS){
@@ -81,6 +98,9 @@ void FirstApp::createCommandBuffers(){
 }
 
 void FirstApp::recordCommandBuffer(int imageIndex){
+	static int frame = 0;
+	frame = (frame + 1) % 1000;
+
 	VkCommandBufferBeginInfo beginInfo {
 		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
 	};
@@ -91,7 +111,7 @@ void FirstApp::recordCommandBuffer(int imageIndex){
 
 	std::array<VkClearValue, 2> clearValues;
 	clearValues[0] = {
-		.color = {0.1f, 0.1f, 0.1f, 1.0f}
+		.color = {0.01f, 0.01f, 0.01f, 1.0f}
 	};
 	clearValues[1] = {
 		.depthStencil = {1.0f, 0},
@@ -131,7 +151,17 @@ void FirstApp::recordCommandBuffer(int imageIndex){
 
 	lvePipeline->bind(commandBuffers[imageIndex]);
 	lveModel->bind(commandBuffers[imageIndex]);
-	lveModel->draw(commandBuffers[imageIndex]);
+
+	for (int j=0; j<4; j++) {
+		SimplePushConstantData push{
+			.offset = {-0.5f + frame*0.02f, -0.4f + j* 0.25f},
+			.color = {0.0f, 0.0f, 0.2f*(j+1)},
+		};
+
+		vkCmdPushConstants(commandBuffers[imageIndex], pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
+		lveModel->draw(commandBuffers[imageIndex]);
+	}
+
 
 	vkCmdEndRenderPass(commandBuffers[imageIndex]);
 	if(vkEndCommandBuffer(commandBuffers[imageIndex]) !=VK_SUCCESS){
@@ -231,9 +261,9 @@ void FirstApp::loadModels(){
 		{{-0.9f,  0.9f},{0.0f, 0.0f, 1.0f}}
 	};
 
-	for(int i=0; i<9; i++){
+	/*for(int i=0; i<9; i++){
 		verticies = generateSierpinski(verticies);
-	}
+	}*/
 
 	lveModel = std::make_unique<LveModel>(lveDevice, verticies);
 
